@@ -10,7 +10,8 @@ if (Test-Path $PicoSdkPath) {
     $env:PICO_SDK_PATH = $PicoSdkPath
     [System.Environment]::SetEnvironmentVariable("PICO_SDK_PATH", $PicoSdkPath, [System.EnvironmentVariableTarget]::User)
     Write-Host "   -> PICO_SDK_PATH set to $PicoSdkPath" -ForegroundColor Gray
-} else {
+}
+else {
     Write-Host "❌ Pico SDK NOT found at $PicoSdkPath" -ForegroundColor Red
     Write-Host "   Please clone it: git clone https://github.com/raspberrypi/pico-sdk.git $PicoSdkPath" -ForegroundColor Yellow
 }
@@ -18,14 +19,16 @@ if (Test-Path $PicoSdkPath) {
 # 2. Picotool
 if (Get-Command picotool -ErrorAction SilentlyContinue) {
     Write-Host "✅ Picotool found in PATH" -ForegroundColor Green
-} else {
+}
+else {
     $PicotoolPath = "C:\picotool"
     if (Test-Path "$PicotoolPath\picotool.exe") {
         Write-Host "✅ Picotool found at $PicotoolPath" -ForegroundColor Green
         $env:PATH += ";$PicotoolPath"
-        [System.Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";$PicotoolPath", [System.EnvironmentVariableTarget]::User)
+        [System.Environment]::SetEnvironmentVariable("PATH", "$($env:PATH);$PicotoolPath", [System.EnvironmentVariableTarget]::User)
         Write-Host "   -> Added to PATH" -ForegroundColor Gray
-    } else {
+    }
+    else {
         Write-Host "⚠️ Picotool not found in PATH or at $PicotoolPath" -ForegroundColor Yellow
         Write-Host "   We will use the manual copy method or you can install it." -ForegroundColor Gray
     }
@@ -35,20 +38,23 @@ if (Get-Command picotool -ErrorAction SilentlyContinue) {
 $MbedTlsPath = "C:\mbedtls"
 if (Test-Path $MbedTlsPath) {
     Write-Host "ℹ️  mbedTLS found at $MbedTlsPath (Not currently used by LibreCipher)" -ForegroundColor Gray
-} else {
+}
+else {
     Write-Host "ℹ️  mbedTLS not found (OK - LibreCipher uses internal crypto)" -ForegroundColor Gray
 }
 
 # 4. Ninja & CMake
 if (Get-Command ninja -ErrorAction SilentlyContinue) {
     Write-Host "✅ Ninja build system found" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "❌ Ninja not found! Install it and add to PATH." -ForegroundColor Red
 }
 
 if (Get-Command cmake -ErrorAction SilentlyContinue) {
     Write-Host "✅ CMake found" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "❌ CMake not found! Install it and add to PATH." -ForegroundColor Red
 }
 
