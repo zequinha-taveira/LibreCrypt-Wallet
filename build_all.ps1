@@ -24,8 +24,8 @@ if (-not (Test-Path "build")) {
 Set-Location build
 
 # Configure CMake
-Write-Host "   -> Configuring CMake..." -ForegroundColor Gray
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release .. 
+Write-Host "   -> Configuring CMake (Target: RP2350)..." -ForegroundColor Gray
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico2 -DPICO_PLATFORM=rp2350 .. 
 if ($LASTEXITCODE -ne 0) { Write-Error "CMake configuration failed" }
 
 # Build
