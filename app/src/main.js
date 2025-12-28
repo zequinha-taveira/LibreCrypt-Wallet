@@ -6,13 +6,17 @@
 let invoke = null;
 let listen = null;
 
-try {
-    const tauri = await import('@tauri-apps/api/core');
-    invoke = tauri.invoke;
-    const event = await import('@tauri-apps/api/event');
-    listen = event.listen;
-} catch (e) {
-    console.log('Running in browser mode (Tauri not available)');
+async function setupTauri() {
+    try {
+        const tauri = await import('@tauri-apps/api/core');
+        invoke = tauri.invoke;
+        const event = await import('@tauri-apps/api/event');
+        listen = event.listen;
+        return true;
+    } catch (e) {
+        console.log('Running in browser mode (Tauri not available)');
+        return false;
+    }
 }
 
 // State
@@ -361,6 +365,7 @@ document.querySelectorAll('.toggle').forEach(toggle => {
 // Initialize
 async function init() {
     console.log('LibreCrypt Wallet App initialized');
+    await setupTauri();
     await checkConnection();
 
     // Start polling for connection status
