@@ -18,9 +18,11 @@ else {
 Write-Host "`n[2/3] Building Firmware (C/Ninja)..." -ForegroundColor Yellow
 Push-Location firmware
 
-if (-not (Test-Path "build")) {
-    New-Item -ItemType Directory -Force -Path "build" | Out-Null
+if (Test-Path "build") {
+    Write-Host "   -> Cleaning previous build..." -ForegroundColor Gray
+    Remove-Item "build" -Recurse -Force | Out-Null
 }
+New-Item -ItemType Directory -Force -Path "build" | Out-Null
 Set-Location build
 
 # Configure CMake
