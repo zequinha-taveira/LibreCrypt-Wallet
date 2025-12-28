@@ -47,27 +47,29 @@ O sistema é composto por:
 
 ---
 
-## 🔐 Criptografia
+## 🔐 Criptografia - LibreCipher
 
-O LibreCrypt Wallet utiliza:
+O LibreCrypt Wallet utiliza **LibreCipher**, nossa suite criptográfica própria:
 
-* 🔓 **Criptografia aberta e documentada**
-* 🧠 **Novo algoritmo criptográfico próprio** (em desenvolvimento)
+* 🔓 **Código aberto e documentado**
+* 🧠 **LibreCipher-KDF** - Derivação de chaves
+* 🛡️ **LibreCipher-Hash** - SHA-256 constant-time
+* ⚙️ **AES-256-GCM** - Criptografia simétrica
 * ⏱️ Implementações **constant-time**
 * 🛡️ Proteção contra ataques de canal lateral
 
-> ⚠️ O algoritmo próprio será inicialmente utilizado **em paralelo com padrões consolidados** (ex.: Ed25519) para validação e testes.
+> ⚠️ Algoritmos próprios coexistem com **padrões consolidados** (Ed25519) para validação.
 
 ---
 
-## 🖥️ App Gerenciador Multiplataforma
+## 🖥️ App Gerenciador (Tauri v2 + Rust)
 
-Plataformas planejadas:
+Plataformas suportadas:
 
 * Windows
 * Linux
 * macOS
-* Android
+* Android (futuro)
 * iOS (futuro)
 
 Funções principais:
@@ -76,6 +78,40 @@ Funções principais:
 * Criação e envio de transações
 * Comunicação segura com o hardware
 * Atualização segura de firmware
+
+---
+
+## 🚀 Quick Start
+
+### Pré-requisitos
+
+* [Rust](https://rustup.rs/)
+* [Node.js](https://nodejs.org/) (v18+)
+* [Pico SDK](https://github.com/raspberrypi/pico-sdk) (para firmware)
+
+### App (Tauri v2)
+
+```bash
+cd app
+npm install
+npm run tauri dev
+```
+
+Ou para criar um novo projeto Tauri:
+```bash
+npm create tauri-app@latest
+```
+
+### Firmware
+
+```bash
+cd firmware
+mkdir build && cd build
+cmake -G Ninja ..
+ninja
+```
+
+O arquivo `librecrypt_wallet.uf2` será gerado em `build/`.
 
 ---
 

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LibreCrypt Wallet</title>
+    <meta name="description" content="Carteira de criptomoedas segura e open-source">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🔐</div>
+                <h1>LibreCrypt Wallet</h1>
+            </div>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot disconnected"></span>
+                <span class="status-text">Desconectado</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <nav class="nav-menu">
+                    <button class="nav-item active" data-section="dashboard">
+                        <span class="nav-icon">📊</span>
+                        <span>Dashboard</span>
+                    </button>
+                    <button class="nav-item" data-section="accounts">
+                        <span class="nav-icon">👛</span>
+                        <span>Contas</span>
+                    </button>
+                    <button class="nav-item" data-section="send">
+                        <span class="nav-icon">📤</span>
+                        <span>Enviar</span>
+                    </button>
+                    <button class="nav-item" data-section="receive">
+                        <span class="nav-icon">📥</span>
+                        <span>Receber</span>
+                    </button>
+                    <button class="nav-item" data-section="settings">
+                        <span class="nav-icon">⚙️</span>
+                        <span>Configurações</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- Content Area -->
+            <section class="content">
+                <!-- Dashboard Section -->
+                <div class="section active" id="dashboard">
+                    <h2>Dashboard</h2>
+                    
+                    <div class="card-grid">
+                        <div class="card wallet-status-card">
+                            <h3>Status da Wallet</h3>
+                            <div class="status-display" id="walletStatus">
+                                <span class="status-icon">🔒</span>
+                                <span class="status-label">Bloqueada</span>
+                            </div>
+                            <button class="btn btn-primary" id="unlockBtn">Desbloquear</button>
+                        </div>
+                        
+                        <div class="card firmware-card">
+                            <h3>Firmware</h3>
+                            <div class="firmware-info">
+                                <span class="version" id="firmwareVersion">v0.0.0</span>
+                                <span class="label">LibreCipher Core</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card info-card">
+                            <h3>Segurança</h3>
+                            <ul class="security-list">
+                                <li>✅ Chaves isoladas em hardware</li>
+                                <li>✅ Criptografia LibreCipher</li>
+                                <li>✅ Código aberto</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accounts Section -->
+                <div class="section" id="accounts">
+                    <h2>Contas</h2>
+                    <div class="accounts-list" id="accountsList">
+                        <p class="placeholder">Conecte o hardware para ver suas contas</p>
+                    </div>
+                </div>
+
+                <!-- Send Section -->
+                <div class="section" id="send">
+                    <h2>Enviar</h2>
+                    <form class="send-form">
+                        <div class="form-group">
+                            <label for="recipient">Endereço Destino</label>
+                            <input type="text" id="recipient" placeholder="addr1...">
+                        </div>
+                        <div class="form-group">
+                            <label for="amount">Valor</label>
+                            <input type="number" id="amount" placeholder="0.00">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-send">
+                            📤 Enviar Transação
+                        </button>
+                        <p class="confirm-notice">⚠️ Confirmação será necessária no dispositivo</p>
+                    </form>
+                </div>
+
+                <!-- Receive Section -->
+                <div class="section" id="receive">
+                    <h2>Receber</h2>
+                    <div class="receive-container">
+                        <div class="address-display" id="receiveAddress">
+                            <code>Conecte o hardware</code>
+                        </div>
+                        <button class="btn btn-secondary" id="copyAddressBtn">📋 Copiar</button>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="section" id="settings">
+                    <h2>Configurações</h2>
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <span>Tema</span>
+                            <select id="themeSelect">
+                                <option value="dark">Escuro</option>
+                                <option value="light">Claro</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <span>Idioma</span>
+                            <select id="langSelect">
+                                <option value="pt">Português</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Unlock Modal -->
+        <div class="modal" id="unlockModal">
+            <div class="modal-content">
+                <h3>Desbloquear Wallet</h3>
+                <input type="password" id="pinInput" placeholder="Digite seu PIN">
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancelUnlock">Cancelar</button>
+                    <button class="btn btn-primary" id="confirmUnlock">Desbloquear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+    "name": "librecrypt-wallet-app",
+    "version": "0.1.0",
+    "description": "LibreCrypt Wallet Manager App",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "tauri": "tauri"
+    },
+    "dependencies": {
+        "@tauri-apps/api": "^2.0.0"
+    },
+    "devDependencies": {
+        "@tauri-apps/cli": "^2.0.0",
+        "vite": "^5.0.0"
+    }
+}
