@@ -1,0 +1,31 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Modern App Icon Background -->
+  <rect width="512" height="512" rx="120" fill="#0A0A0B"/>
+  
+  <!-- Subtle Gradient Glow -->
+  <defs>
+    <radialGradient id="glow" cx="256" cy="256" r="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10B981" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#0A0A0B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lockGrad" x1="256" y1="120" x2="256" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#34D399"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="512" height="512" rx="120" fill="url(#glow)"/>
+
+  <!-- Stylized Lock Shackle -->
+  <path d="M256 110C195 110 145 160 145 221V280H367V221C367 160 317 110 256 110ZM190 221C190 185 220 155 256 155C292 155 322 185 322 221V280H190V221Z" fill="#E5E7EB" fill-opacity="0.9"/>
+  
+  <!-- Lock Body -->
+  <rect x="120" y="280" width="272" height="160" rx="24" fill="url(#lockGrad)"/>
+  
+  <!-- Keyhole -->
+  <circle cx="256" cy="355" r="28" fill="#064E3B"/>
+  <rect x="246" y="375" width="20" height="35" rx="10" fill="#064E3B"/>
+  
+  <!-- Decorative Circuit Pattern -->
+  <path d="M120 320H150M120 350H160M120 380H150M392 320H362M392 350H352M392 380H362" stroke="#A7F3D0" stroke-width="4" stroke-linecap="round"/>
+</svg>
