@@ -9,22 +9,15 @@ mod protocol;
 
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
+use crate::protocol::{VersionInfo, WalletStatus};
 
-/// Status da wallet
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum WalletStatus {
+/// Status da wallet estendido para UI (inclui estados de conexão)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum AppWalletStatus {
     Disconnected,
-    Connected,
+    Uninitialized,
     Locked,
     Unlocked,
-}
-
-/// Resposta de versão
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VersionInfo {
-    pub major: u8,
-    pub minor: u8,
-    pub patch: u8,
 }
 
 /// Comando: Verificar conexão com hardware
@@ -41,7 +34,7 @@ async fn get_firmware_version() -> Result<VersionInfo, String> {
 
 /// Comando: Obter status da wallet
 #[tauri::command]
-async fn get_wallet_status() -> Result<WalletStatus, String> {
+async fn get_wallet_status() -> Result<AppWalletStatus, String> {
     usb::get_status().await
 }
 
