@@ -1,266 +1,370 @@
 /**
- * LibreCrypt Wallet - Main JavaScript
+ * LibreCrypt Wallet - Main Application
  */
 
-// Tauri APIs (se disponível)
+// Import Tauri API if available
 let invoke = null;
+let listen = null;
 
-// Check if running in Tauri
-if (window.__TAURI__) {
-    invoke = window.__TAURI__.invoke;
+try {
+    const tauri = await import('@tauri-apps/api/core');
+    invoke = tauri.invoke;
+    const event = await import('@tauri-apps/api/event');
+    listen = event.listen;
+} catch (e) {
+    console.log('Running in browser mode (Tauri not available)');
 }
 
 // State
 const state = {
     connected: false,
-    walletStatus: 'disconnected',
-    firmwareVersion: null,
-    currentSection: 'dashboard',
+    walletStatus: 'disconnected', // disconnected, locked, unlocked
+    accounts: [],
+    currentPage: 'dashboard',
+    deviceInfo: null
 };
 
 // DOM Elements
 const elements = {
-    connectionStatus: document.getElementById('connectionStatus'),
-    walletStatus: document.getElementById('walletStatus'),
-    firmwareVersion: document.getElementById('firmwareVersion'),
-    unlockBtn: document.getElementById('unlockBtn'),
-    unlockModal: document.getElementById('unlockModal'),
-    pinInput: document.getElementById('pinInput'),
-    cancelUnlock: document.getElementById('cancelUnlock'),
-    confirmUnlock: document.getElementById('confirmUnlock'),
-    navItems: document.querySelectorAll('.nav-item'),
-    sections: document.querySelectorAll('.section'),
-    receiveAddress: document.getElementById('receiveAddress'),
-    copyAddressBtn: document.getElementById('copyAddressBtn'),
+    statusDot: document.getElementById('status-dot'),
+    statusText: document.getElementById('status-text'),
+    pageTitle: document.getElementById('page-title'),
+    btnConnect: document.getElementById('btn-connect'),
+    btnRefresh: document.getElementById('btn-refresh'),
+    pinModal: document.getElementById('pin-modal'),
+    toastContainer: document.getElementById('toast-container'),
+    walletStatusBadge: document.getElementById('wallet-status-badge'),
+    totalBalance: document.getElementById('total-balance'),
+    accountCount: document.getElementById('account-count'),
+    firmwareVersion: document.getElementById('firmware-version')
 };
 
 // Navigation
-function navigateTo(sectionId) {
-    state.currentSection = sectionId;
+const navItems = document.querySelectorAll('.nav-item[data-page]');
+const pages = document.querySelectorAll('.page');
 
-    elements.sections.forEach(section => {
-        section.classList.remove('active');
+function showPage(pageName) {
+    state.currentPage = pageName;
+
+    // Update nav
+    navItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.page === pageName);
     });
 
-    elements.navItems.forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.section === sectionId) {
-            item.classList.add('active');
+    // Update pages
+    pages.forEach(page => {
+        const isActive = page.id === `page-${pageName}`;
+        page.classList.toggle('hidden', !isActive);
+        if (isActive) {
+            page.classList.add('animate-fadeIn');
         }
     });
 
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) {
-        targetSection.classList.add('active');
-    }
+    // Update title
+    const titles = {
+        dashboard: 'Dashboard',
+        accounts: 'Contas',
+        send: 'Enviar',
+        receive: 'Receber',
+        settings: 'Configurações',
+        security: 'Segurança'
+    };
+    elements.pageTitle.textContent = titles[pageName] || 'Dashboard';
 }
 
-// Initialize navigation
-elements.navItems.forEach(item => {
-    item.addEventListener('click', () => {
-        navigateTo(item.dataset.section);
-    });
+// Make showPage global for onclick handlers
+window.showPage = showPage;
+
+navItems.forEach(item => {
+    item.addEventListener('click', () => showPage(item.dataset.page));
 });
 
-// Connection Status
-function updateConnectionStatus(connected) {
-    state.connected = connected;
-    const statusDot = elements.connectionStatus.querySelector('.status-dot');
-    const statusText = elements.connectionStatus.querySelector('.status-text');
+// Device Connection
+async function checkConnection() {
+    if (!invoke) {
+        // Simulate connection in browser mode
+        updateDeviceStatus('disconnected');
+        return;
+    }
 
-    if (connected) {
-        statusDot.classList.remove('disconnected');
-        statusDot.classList.add('connected');
-        statusText.textContent = 'Conectado';
-    } else {
-        statusDot.classList.remove('connected');
-        statusDot.classList.add('disconnected');
-        statusText.textContent = 'Desconectado';
+    try {
+        const connected = await invoke('check_connection');
+        if (connected) {
+            await updateWalletStatus();
+        } else {
+            updateDeviceStatus('disconnected');
+        }
+    } catch (error) {
+        console.error('Connection check failed:', error);
+        updateDeviceStatus('disconnected');
     }
 }
 
-// Wallet Status
-function updateWalletStatus(status) {
+async function connect() {
+    showToast('Conectando ao dispositivo...', 'info');
+
+    if (!invoke) {
+        // Simulate in browser mode
+        setTimeout(() => {
+            state.connected = true;
+            updateDeviceStatus('locked');
+            showToast('Conectado (modo demo)', 'success');
+        }, 1000);
+        return;
+    }
+
+    try {
+        const connected = await invoke('check_connection');
+        if (connected) {
+            state.connected = true;
+            await updateWalletStatus();
+            showToast('Dispositivo conectado!', 'success');
+        } else {
+            showToast('Nenhum dispositivo encontrado', 'error');
+        }
+    } catch (error) {
+        showToast(`Erro: ${error}`, 'error');
+    }
+}
+
+async function updateWalletStatus() {
+    if (!invoke) return;
+
+    try {
+        const status = await invoke('get_wallet_status');
+        state.walletStatus = status.toLowerCase();
+        updateDeviceStatus(state.walletStatus);
+
+        // Update UI based on status
+        updateDashboard();
+    } catch (error) {
+        console.error('Failed to get wallet status:', error);
+    }
+}
+
+function updateDeviceStatus(status) {
     state.walletStatus = status;
-    const statusIcon = elements.walletStatus.querySelector('.status-icon');
-    const statusLabel = elements.walletStatus.querySelector('.status-label');
+
+    const statusDot = elements.statusDot;
+    const statusText = elements.statusText;
+    const badge = elements.walletStatusBadge;
+
+    statusDot.classList.remove('connected', 'locked', 'disconnected');
+    badge.classList.remove('badge-success', 'badge-warning', 'badge-danger');
 
     switch (status) {
-        case 'Unlocked':
-            statusIcon.textContent = '🔓';
-            statusLabel.textContent = 'Desbloqueada';
-            elements.unlockBtn.textContent = 'Bloquear';
+        case 'unlocked':
+            statusDot.classList.add('connected');
+            statusText.textContent = 'Desbloqueado';
+            badge.textContent = 'Desbloqueado';
+            badge.classList.add('badge-success');
+            elements.btnConnect.innerHTML = '🔒 Bloquear';
             break;
-        case 'Locked':
-            statusIcon.textContent = '🔒';
-            statusLabel.textContent = 'Bloqueada';
-            elements.unlockBtn.textContent = 'Desbloquear';
+        case 'locked':
+            statusDot.classList.add('locked');
+            statusText.textContent = 'Bloqueado';
+            badge.textContent = 'Bloqueado';
+            badge.classList.add('badge-warning');
+            elements.btnConnect.innerHTML = '🔓 Desbloquear';
             break;
         default:
-            statusIcon.textContent = '⚪';
-            statusLabel.textContent = 'Desconectada';
-            elements.unlockBtn.textContent = 'Conectar';
+            statusDot.classList.add('disconnected');
+            statusText.textContent = 'Desconectado';
+            badge.textContent = 'Desconectado';
+            badge.classList.add('badge-danger');
+            elements.btnConnect.innerHTML = '🔌 Conectar';
     }
 }
 
-// Firmware Version
-function updateFirmwareVersion(version) {
-    state.firmwareVersion = version;
-    if (version) {
-        elements.firmwareVersion.textContent = `v${version.major}.${version.minor}.${version.patch}`;
-    } else {
-        elements.firmwareVersion.textContent = 'v0.0.0';
-    }
+function updateDashboard() {
+    // Update account count
+    elements.accountCount.textContent = state.accounts.length;
+
+    // Update balance
+    const totalBalance = state.accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    elements.totalBalance.textContent = `${totalBalance.toFixed(8)} BTC`;
 }
 
-// Modal
-function showUnlockModal() {
-    elements.unlockModal.classList.add('active');
-    elements.pinInput.focus();
+// PIN Modal
+let pinCallback = null;
+
+function showPinModal(callback) {
+    pinCallback = callback;
+    elements.pinModal.classList.remove('hidden');
+
+    // Focus first input
+    const firstInput = document.querySelector('.pin-digit[data-index="0"]');
+    if (firstInput) firstInput.focus();
 }
 
-function hideUnlockModal() {
-    elements.unlockModal.classList.remove('active');
-    elements.pinInput.value = '';
+function hidePinModal() {
+    elements.pinModal.classList.add('hidden');
+    pinCallback = null;
+
+    // Clear inputs
+    document.querySelectorAll('.pin-digit').forEach(input => {
+        input.value = '';
+    });
 }
 
-elements.unlockBtn.addEventListener('click', () => {
-    if (state.walletStatus === 'Unlocked') {
-        lockWallet();
-    } else {
-        showUnlockModal();
-    }
-});
-
-elements.cancelUnlock.addEventListener('click', hideUnlockModal);
-
-elements.confirmUnlock.addEventListener('click', async () => {
-    const pin = elements.pinInput.value;
-    if (pin) {
-        await unlockWallet(pin);
-        hideUnlockModal();
-    }
-});
-
-// Tauri Commands
-async function checkConnection() {
-    if (!invoke) return false;
-    try {
-        return await invoke('check_connection');
-    } catch (e) {
-        console.error('Connection check failed:', e);
-        return false;
-    }
+function getPin() {
+    const digits = document.querySelectorAll('.pin-digit');
+    return Array.from(digits).map(d => d.value).join('');
 }
 
-async function getFirmwareVersion() {
-    if (!invoke) return null;
-    try {
-        return await invoke('get_firmware_version');
-    } catch (e) {
-        console.error('Failed to get version:', e);
-        return null;
-    }
-}
-
-async function getWalletStatus() {
-    if (!invoke) return 'Disconnected';
-    try {
-        return await invoke('get_wallet_status');
-    } catch (e) {
-        console.error('Failed to get status:', e);
-        return 'Disconnected';
-    }
-}
-
-async function unlockWallet(pin) {
-    if (!invoke) return false;
-    try {
-        const result = await invoke('unlock_wallet', { pin });
-        if (result) {
-            updateWalletStatus('Unlocked');
+// PIN input handling
+document.querySelectorAll('.pin-digit').forEach(input => {
+    input.addEventListener('input', (e) => {
+        const index = parseInt(e.target.dataset.index);
+        if (e.target.value && index < 5) {
+            const next = document.querySelector(`.pin-digit[data-index="${index + 1}"]`);
+            if (next) next.focus();
         }
-        return result;
-    } catch (e) {
-        console.error('Unlock failed:', e);
-        return false;
-    }
-}
+    });
 
-async function lockWallet() {
-    if (!invoke) return;
-    try {
-        await invoke('lock_wallet');
-        updateWalletStatus('Locked');
-    } catch (e) {
-        console.error('Lock failed:', e);
-    }
-}
-
-async function getAddress(accountIndex) {
-    if (!invoke) return null;
-    try {
-        return await invoke('get_address', { accountIndex });
-    } catch (e) {
-        console.error('Failed to get address:', e);
-        return null;
-    }
-}
-
-// Copy Address
-elements.copyAddressBtn.addEventListener('click', () => {
-    const address = elements.receiveAddress.querySelector('code').textContent;
-    navigator.clipboard.writeText(address).then(() => {
-        elements.copyAddressBtn.textContent = '✅ Copiado!';
-        setTimeout(() => {
-            elements.copyAddressBtn.textContent = '📋 Copiar';
-        }, 2000);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value) {
+            const index = parseInt(e.target.dataset.index);
+            if (index > 0) {
+                const prev = document.querySelector(`.pin-digit[data-index="${index - 1}"]`);
+                if (prev) prev.focus();
+            }
+        }
     });
 });
 
-// Polling for connection
-async function pollConnection() {
-    const connected = await checkConnection();
-    updateConnectionStatus(connected);
-
-    if (connected) {
-        const version = await getFirmwareVersion();
-        updateFirmwareVersion(version);
-
-        const status = await getWalletStatus();
-        updateWalletStatus(status);
-
-        // Get address if unlocked
-        if (status === 'Unlocked') {
-            const address = await getAddress(0);
-            if (address) {
-                elements.receiveAddress.querySelector('code').textContent = address;
-            }
-        }
-    }
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    // Initial state
-    updateConnectionStatus(false);
-    updateWalletStatus('Disconnected');
-
-    // Start polling (if Tauri is available)
-    if (invoke) {
-        pollConnection();
-        setInterval(pollConnection, 5000);
-    } else {
-        // Demo mode without Tauri
-        console.log('Running in demo mode (no Tauri)');
-
-        // Simulate connection after 2 seconds
-        setTimeout(() => {
-            updateConnectionStatus(true);
-            updateFirmwareVersion({ major: 0, minor: 1, patch: 0 });
-            updateWalletStatus('Locked');
-        }, 2000);
+document.getElementById('modal-close')?.addEventListener('click', hidePinModal);
+document.getElementById('btn-cancel-pin')?.addEventListener('click', hidePinModal);
+document.getElementById('btn-confirm-pin')?.addEventListener('click', () => {
+    const pin = getPin();
+    if (pin.length === 6 && pinCallback) {
+        pinCallback(pin);
+        hidePinModal();
     }
 });
 
-console.log('LibreCrypt Wallet App initialized');
+// Toast Notifications
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+
+    toast.innerHTML = `
+    <span>${icons[type] || icons.info}</span>
+    <span>${message}</span>
+  `;
+
+    elements.toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'fadeIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Button handlers
+elements.btnConnect?.addEventListener('click', async () => {
+    if (state.walletStatus === 'disconnected') {
+        await connect();
+    } else if (state.walletStatus === 'locked') {
+        showPinModal(async (pin) => {
+            try {
+                if (invoke) {
+                    const success = await invoke('unlock_wallet', { pin });
+                    if (success) {
+                        showToast('Wallet desbloqueada!', 'success');
+                        updateDeviceStatus('unlocked');
+                    } else {
+                        showToast('PIN incorreto', 'error');
+                    }
+                } else {
+                    // Demo mode
+                    showToast('Wallet desbloqueada (demo)', 'success');
+                    updateDeviceStatus('unlocked');
+                }
+            } catch (error) {
+                showToast(`Erro: ${error}`, 'error');
+            }
+        });
+    } else if (state.walletStatus === 'unlocked') {
+        try {
+            if (invoke) {
+                await invoke('lock_wallet');
+            }
+            showToast('Wallet bloqueada', 'info');
+            updateDeviceStatus('locked');
+        } catch (error) {
+            showToast(`Erro: ${error}`, 'error');
+        }
+    }
+});
+
+elements.btnRefresh?.addEventListener('click', async () => {
+    elements.btnRefresh.classList.add('animate-spin');
+    await checkConnection();
+    setTimeout(() => {
+        elements.btnRefresh.classList.remove('animate-spin');
+    }, 1000);
+});
+
+// Create wallet button
+document.getElementById('btn-create-wallet')?.addEventListener('click', () => {
+    if (state.walletStatus === 'disconnected') {
+        showToast('Conecte o dispositivo primeiro', 'warning');
+        return;
+    }
+
+    showPinModal(async (pin) => {
+        try {
+            if (invoke) {
+                const success = await invoke('create_wallet', { pin });
+                if (success) {
+                    showToast('Wallet criada com sucesso!', 'success');
+                    updateDeviceStatus('unlocked');
+                }
+            } else {
+                showToast('Wallet criada (demo)', 'success');
+                updateDeviceStatus('unlocked');
+            }
+        } catch (error) {
+            showToast(`Erro: ${error}`, 'error');
+        }
+    });
+});
+
+// Copy address button
+document.getElementById('btn-copy-address')?.addEventListener('click', async () => {
+    const addressEl = document.getElementById('receive-address');
+    const address = addressEl?.textContent || '';
+
+    try {
+        await navigator.clipboard.writeText(address);
+        showToast('Endereço copiado!', 'success');
+    } catch (error) {
+        showToast('Erro ao copiar', 'error');
+    }
+});
+
+// Toggle switches
+document.querySelectorAll('.toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+        toggle.classList.toggle('active');
+    });
+});
+
+// Initialize
+async function init() {
+    console.log('LibreCrypt Wallet App initialized');
+    await checkConnection();
+
+    // Start polling for connection status
+    setInterval(checkConnection, 5000);
+}
+
+init();

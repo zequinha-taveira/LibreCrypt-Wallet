@@ -11,8 +11,8 @@
 #include "pico/stdlib.h"
 #include "sha256.h"
 #include "ws2812.h"
+#include <stdio.h>
 #include <string.h>
-
 
 // Flash addresses
 #define FLASH_BASE 0x10000000

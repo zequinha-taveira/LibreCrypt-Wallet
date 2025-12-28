@@ -1,166 +1,396 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LibreCrypt Wallet</title>
-    <meta name="description" content="Carteira de criptomoedas segura e open-source">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/src/styles/main.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/src/styles/design-system.css">
+    <link rel="stylesheet" href="/src/styles/layout.css">
+    <link rel="stylesheet" href="/src/styles/components.css">
 </head>
+
 <body>
-    <div id="app">
+    <div class="app" id="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">🔐</div>
+                <div class="sidebar-brand">
+                    <h2>LibreCrypt</h2>
+                    <span>Hardware Wallet</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Principal</div>
+                    <a class="nav-item active" data-page="dashboard">
+                        <span class="nav-item-icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a class="nav-item" data-page="accounts">
+                        <span class="nav-item-icon">💼</span>
+                        <span>Contas</span>
+                    </a>
+                    <a class="nav-item" data-page="send">
+                        <span class="nav-item-icon">📤</span>
+                        <span>Enviar</span>
+                    </a>
+                    <a class="nav-item" data-page="receive">
+                        <span class="nav-item-icon">📥</span>
+                        <span>Receber</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Sistema</div>
+                    <a class="nav-item" data-page="settings">
+                        <span class="nav-item-icon">⚙️</span>
+                        <span>Configurações</span>
+                    </a>
+                    <a class="nav-item" data-page="security">
+                        <span class="nav-item-icon">🛡️</span>
+                        <span>Segurança</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="device-status" id="device-status">
+                    <div class="status-dot disconnected" id="status-dot"></div>
+                    <span id="status-text">Desconectado</span>
+                </div>
+            </div>
+        </aside>
+
         <!-- Header -->
         <header class="header">
-            <div class="logo">
-                <div class="logo-icon">🔐</div>
-                <h1>LibreCrypt Wallet</h1>
+            <div class="header-title">
+                <h1 id="page-title">Dashboard</h1>
             </div>
-            <div class="connection-status" id="connectionStatus">
-                <span class="status-dot disconnected"></span>
-                <span class="status-text">Desconectado</span>
+            <div class="header-actions">
+                <button class="btn btn-secondary btn-icon" id="btn-refresh" title="Atualizar">🔄</button>
+                <button class="btn btn-primary" id="btn-connect">
+                    <span>Conectar</span>
+                </button>
             </div>
         </header>
 
         <!-- Main Content -->
-        <main class="main-content">
-            <!-- Sidebar -->
-            <aside class="sidebar">
-                <nav class="nav-menu">
-                    <button class="nav-item active" data-section="dashboard">
-                        <span class="nav-icon">📊</span>
-                        <span>Dashboard</span>
-                    </button>
-                    <button class="nav-item" data-section="accounts">
-                        <span class="nav-icon">👛</span>
-                        <span>Contas</span>
-                    </button>
-                    <button class="nav-item" data-section="send">
-                        <span class="nav-icon">📤</span>
-                        <span>Enviar</span>
-                    </button>
-                    <button class="nav-item" data-section="receive">
-                        <span class="nav-icon">📥</span>
-                        <span>Receber</span>
-                    </button>
-                    <button class="nav-item" data-section="settings">
-                        <span class="nav-icon">⚙️</span>
-                        <span>Configurações</span>
-                    </button>
-                </nav>
-            </aside>
+        <main class="main">
+            <div class="main-content">
 
-            <!-- Content Area -->
-            <section class="content">
-                <!-- Dashboard Section -->
-                <div class="section active" id="dashboard">
-                    <h2>Dashboard</h2>
-                    
-                    <div class="card-grid">
-                        <div class="card wallet-status-card">
-                            <h3>Status da Wallet</h3>
-                            <div class="status-display" id="walletStatus">
-                                <span class="status-icon">🔒</span>
-                                <span class="status-label">Bloqueada</span>
+                <!-- Dashboard Page -->
+                <section class="page animate-fadeIn" id="page-dashboard">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h2>Visão Geral</h2>
+                            <p>Gerencie sua carteira de hardware</p>
+                        </div>
+                    </div>
+
+                    <!-- Balance Card -->
+                    <div class="balance-display mb-lg animate-glow">
+                        <div class="balance-label">Saldo Total</div>
+                        <div class="balance-value" id="total-balance">0.00000000 BTC</div>
+                        <div class="balance-fiat">≈ $0.00 USD</div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="dashboard-grid mt-lg">
+                        <div class="card stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-card-icon">💼</div>
+                                <span class="badge badge-success">Ativo</span>
                             </div>
-                            <button class="btn btn-primary" id="unlockBtn">Desbloquear</button>
+                            <div class="stat-card-value" id="account-count">0</div>
+                            <div class="stat-card-label">Contas</div>
                         </div>
-                        
-                        <div class="card firmware-card">
-                            <h3>Firmware</h3>
-                            <div class="firmware-info">
-                                <span class="version" id="firmwareVersion">v0.0.0</span>
-                                <span class="label">LibreCipher Core</span>
+
+                        <div class="card stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-card-icon">📝</div>
+                            </div>
+                            <div class="stat-card-value" id="tx-count">0</div>
+                            <div class="stat-card-label">Transações</div>
+                        </div>
+
+                        <div class="card stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-card-icon">🔐</div>
+                                <span class="badge" id="wallet-status-badge">Desconectado</span>
+                            </div>
+                            <div class="stat-card-value" id="firmware-version">v0.1.0</div>
+                            <div class="stat-card-label">Firmware</div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card mt-lg">
+                        <h3 class="mb-md">Ações Rápidas</h3>
+                        <div class="flex gap-md">
+                            <button class="btn btn-primary btn-lg" onclick="showPage('send')">
+                                📤 Enviar
+                            </button>
+                            <button class="btn btn-secondary btn-lg" onclick="showPage('receive')">
+                                📥 Receber
+                            </button>
+                            <button class="btn btn-secondary btn-lg" id="btn-create-wallet">
+                                ➕ Criar Wallet
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Accounts Page -->
+                <section class="page hidden" id="page-accounts">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h2>Suas Contas</h2>
+                            <p>Gerencie suas contas e endereços</p>
+                        </div>
+                        <button class="btn btn-primary">➕ Nova Conta</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="account-list" id="account-list">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">💼</div>
+                                <h3>Nenhuma conta ainda</h3>
+                                <p>Conecte sua hardware wallet para ver suas contas</p>
+                                <button class="btn btn-primary" id="btn-connect-accounts">Conectar</button>
                             </div>
                         </div>
-                        
-                        <div class="card info-card">
-                            <h3>Segurança</h3>
-                            <ul class="security-list">
-                                <li>✅ Chaves isoladas em hardware</li>
-                                <li>✅ Criptografia LibreCipher</li>
-                                <li>✅ Código aberto</li>
-                            </ul>
+                    </div>
+                </section>
+
+                <!-- Send Page -->
+                <section class="page hidden" id="page-send">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h2>Enviar Cripto</h2>
+                            <p>Envie Bitcoin para outro endereço</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Accounts Section -->
-                <div class="section" id="accounts">
-                    <h2>Contas</h2>
-                    <div class="accounts-list" id="accountsList">
-                        <p class="placeholder">Conecte o hardware para ver suas contas</p>
+                    <div class="card" style="max-width: 500px;">
+                        <form id="send-form">
+                            <div class="form-group">
+                                <label class="form-label">Endereço do Destinatário</label>
+                                <input type="text" class="input" id="send-address" placeholder="bc1q..." required>
+                                <div class="form-hint">Endereço Bitcoin do destinatário</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Valor</label>
+                                <div class="input-group">
+                                    <input type="number" class="input" id="send-amount" placeholder="0.00000000"
+                                        step="0.00000001" required>
+                                    <div class="input-addon">BTC</div>
+                                </div>
+                                <div class="form-hint">Disponível: 0.00000000 BTC</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Taxa de Rede</label>
+                                <div class="flex gap-sm">
+                                    <button type="button" class="btn btn-secondary">Lenta</button>
+                                    <button type="button" class="btn btn-primary">Normal</button>
+                                    <button type="button" class="btn btn-secondary">Rápida</button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-full mt-lg">
+                                📤 Assinar e Enviar
+                            </button>
+                        </form>
                     </div>
-                </div>
+                </section>
 
-                <!-- Send Section -->
-                <div class="section" id="send">
-                    <h2>Enviar</h2>
-                    <form class="send-form">
-                        <div class="form-group">
-                            <label for="recipient">Endereço Destino</label>
-                            <input type="text" id="recipient" placeholder="addr1...">
-                        </div>
-                        <div class="form-group">
-                            <label for="amount">Valor</label>
-                            <input type="number" id="amount" placeholder="0.00">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-send">
-                            📤 Enviar Transação
-                        </button>
-                        <p class="confirm-notice">⚠️ Confirmação será necessária no dispositivo</p>
-                    </form>
-                </div>
-
-                <!-- Receive Section -->
-                <div class="section" id="receive">
-                    <h2>Receber</h2>
-                    <div class="receive-container">
-                        <div class="address-display" id="receiveAddress">
-                            <code>Conecte o hardware</code>
-                        </div>
-                        <button class="btn btn-secondary" id="copyAddressBtn">📋 Copiar</button>
-                    </div>
-                </div>
-
-                <!-- Settings Section -->
-                <div class="section" id="settings">
-                    <h2>Configurações</h2>
-                    <div class="settings-list">
-                        <div class="setting-item">
-                            <span>Tema</span>
-                            <select id="themeSelect">
-                                <option value="dark">Escuro</option>
-                                <option value="light">Claro</option>
-                            </select>
-                        </div>
-                        <div class="setting-item">
-                            <span>Idioma</span>
-                            <select id="langSelect">
-                                <option value="pt">Português</option>
-                                <option value="en">English</option>
-                            </select>
+                <!-- Receive Page -->
+                <section class="page hidden" id="page-receive">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h2>Receber Cripto</h2>
+                            <p>Compartilhe seu endereço para receber Bitcoin</p>
                         </div>
                     </div>
-                </div>
-            </section>
+
+                    <div class="card" style="max-width: 400px;">
+                        <div class="qr-container">
+                            <div class="qr-code" id="qr-code">
+                                <div class="text-muted text-center">
+                                    Conecte a wallet<br>para gerar QR
+                                </div>
+                            </div>
+
+                            <div class="qr-address">
+                                <code id="receive-address">bc1q...</code>
+                                <button class="btn btn-icon" id="btn-copy-address" title="Copiar">📋</button>
+                            </div>
+
+                            <button class="btn btn-secondary w-full" id="btn-new-address">
+                                🔄 Gerar Novo Endereço
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Page -->
+                <section class="page hidden" id="page-settings">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h2>Configurações</h2>
+                            <p>Personalize sua experiência</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="settings-section">
+                            <div class="settings-title">Hardware</div>
+
+                            <div class="settings-item">
+                                <div class="settings-item-info">
+                                    <div class="settings-item-icon">🔧</div>
+                                    <div class="settings-item-text">
+                                        <h4>Versão do Firmware</h4>
+                                        <p id="settings-firmware">v0.1.0</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary">Atualizar</button>
+                            </div>
+
+                            <div class="settings-item">
+                                <div class="settings-item-info">
+                                    <div class="settings-item-icon">🔌</div>
+                                    <div class="settings-item-text">
+                                        <h4>Porta USB</h4>
+                                        <p id="settings-port">Não conectado</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <div class="settings-title">Preferências</div>
+
+                            <div class="settings-item">
+                                <div class="settings-item-info">
+                                    <div class="settings-item-icon">🌙</div>
+                                    <div class="settings-item-text">
+                                        <h4>Tema Escuro</h4>
+                                        <p>Ativado</p>
+                                    </div>
+                                </div>
+                                <div class="toggle active" id="toggle-theme"></div>
+                            </div>
+
+                            <div class="settings-item">
+                                <div class="settings-item-info">
+                                    <div class="settings-item-icon">🔔</div>
+                                    <div class="settings-item-text">
+                                        <h4>Notificações</h4>
+                                        <p>Alertas de transações</p>
+                                    </div>
+                                </div>
+                                <div class="toggle active" id="toggle-notifications"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Security Page -->
+                <section class="page hidden" id="page-security">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h2>Segurança</h2>
+                            <p>Proteja sua carteira</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="settings-section">
+                            <div class="settings-title">Autenticação</div>
+
+                            <div class="settings-item">
+                                <div class="settings-item-info">
+                                    <div class="settings-item-icon">🔑</div>
+                                    <div class="settings-item-text">
+                                        <h4>Alterar PIN</h4>
+                                        <p>Proteja o acesso à sua wallet</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary" id="btn-change-pin">Alterar</button>
+                            </div>
+
+                            <div class="settings-item">
+                                <div class="settings-item-info">
+                                    <div class="settings-item-icon">📝</div>
+                                    <div class="settings-item-text">
+                                        <h4>Backup Seed</h4>
+                                        <p>Exibir frase de recuperação</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary" id="btn-backup">Visualizar</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <div class="settings-title">Opções Avançadas</div>
+
+                            <div class="settings-item">
+                                <div class="settings-item-info">
+                                    <div class="settings-item-icon">⚠️</div>
+                                    <div class="settings-item-text">
+                                        <h4>Resetar Wallet</h4>
+                                        <p class="text-danger">Apaga todos os dados</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-danger" id="btn-reset">Resetar</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
         </main>
+    </div>
 
-        <!-- Unlock Modal -->
-        <div class="modal" id="unlockModal">
-            <div class="modal-content">
-                <h3>Desbloquear Wallet</h3>
-                <input type="password" id="pinInput" placeholder="Digite seu PIN">
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" id="cancelUnlock">Cancelar</button>
-                    <button class="btn btn-primary" id="confirmUnlock">Desbloquear</button>
+    <!-- PIN Modal -->
+    <div class="modal-overlay hidden" id="pin-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Digite o PIN</h3>
+                <button class="modal-close" id="modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="pin-input-container">
+                    <input type="password" class="pin-digit" maxlength="1" data-index="0">
+                    <input type="password" class="pin-digit" maxlength="1" data-index="1">
+                    <input type="password" class="pin-digit" maxlength="1" data-index="2">
+                    <input type="password" class="pin-digit" maxlength="1" data-index="3">
+                    <input type="password" class="pin-digit" maxlength="1" data-index="4">
+                    <input type="password" class="pin-digit" maxlength="1" data-index="5">
                 </div>
+                <p class="text-center text-muted mt-md" id="pin-status">Digite seu PIN de 6 dígitos</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-pin">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirm-pin">Confirmar</button>
             </div>
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
     <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>

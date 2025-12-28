@@ -6,8 +6,8 @@
 #define WALLET_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
-
 
 // Status da wallet
 typedef enum {

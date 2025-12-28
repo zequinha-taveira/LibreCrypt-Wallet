@@ -7,8 +7,8 @@
 
 #include "ws2812.h"
 #include "hardware/gpio.h"
+#include "hardware/sync.h"
 #include "pico/stdlib.h"
-
 
 // Timing for WS2812 at 150MHz
 // T0H = 0.4us = 60 cycles

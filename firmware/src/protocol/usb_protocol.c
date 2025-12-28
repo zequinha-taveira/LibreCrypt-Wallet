@@ -4,10 +4,10 @@
 
 #include "usb_protocol.h"
 #include "librecipher.h"
+#include "pico/stdlib.h"
 #include "wallet.h"
 #include <stdio.h>
 #include <string.h>
-
 
 // Frame format: [SOF][LEN][CMD][DATA...][CRC16]
 #define SOF_BYTE 0xAA
