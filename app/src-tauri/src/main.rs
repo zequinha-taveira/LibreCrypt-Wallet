@@ -5,6 +5,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod usb;
+mod protocol;
 
 use serde::{Deserialize, Serialize};
 use tauri::Manager;

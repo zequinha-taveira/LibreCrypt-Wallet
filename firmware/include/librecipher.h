@@ -11,7 +11,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-
 // Tamanhos de primitivos
 #define LIBRECIPHER_HASH_SIZE 32
 #define LIBRECIPHER_KEY_SIZE 32
@@ -76,5 +75,34 @@ bool librecipher_decrypt(const uint8_t *key, const uint8_t *nonce,
                          const uint8_t *ciphertext, size_t ciphertext_len,
                          const uint8_t *aad, size_t aad_len, const uint8_t *tag,
                          uint8_t *plaintext);
+
+// ============ Ed25519 Digital Signatures ============
+
+/**
+ * Generate Ed25519 key pair
+ * @param seed 32 bytes random seed
+ * @param public_key output 32 bytes
+ * @param secret_key output 64 bytes
+ */
+void librecipher_ed25519_keygen(const uint8_t *seed, uint8_t *public_key,
+                                uint8_t *secret_key);
+
+/**
+ * Sign message with Ed25519
+ * @param signature output 64 bytes
+ * @param message data to sign
+ * @param message_len length
+ * @param secret_key 64 bytes
+ */
+void librecipher_ed25519_sign(uint8_t *signature, const uint8_t *message,
+                              size_t message_len, const uint8_t *secret_key);
+
+/**
+ * Verify Ed25519 signature
+ * @return true if valid
+ */
+bool librecipher_ed25519_verify(const uint8_t *signature,
+                                const uint8_t *message, size_t message_len,
+                                const uint8_t *public_key);
 
 #endif // LIBRECIPHER_H
