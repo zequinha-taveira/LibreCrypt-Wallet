@@ -11,6 +11,6 @@
 
 #define BIP39_WORDLIST_SIZE 2048
 
-extern const char *const BIP39_WORDLIST[BIP39_WORDLIST_SIZE];
+extern const char *const BIP39_WORDLIST[];
 
 #endif // LIBRECRYPT_BIP39_WORDLIST_H

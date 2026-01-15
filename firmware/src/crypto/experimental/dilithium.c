@@ -38,6 +38,7 @@ bool dilithium_sign(uint8_t sig[DILITHIUM_SIG_BYTES], uint32_t *sig_len,
   // Uses Fiat-Shamir with aborts
 
   *sig_len = 0;
+  (void)msg_len;
   return false;
 }
 

@@ -6,26 +6,17 @@
 #include "drivers/ws2812.h"
 #include "hardware/clocks.h"
 #include "hardware/pio.h"
+#include "hardware/sync.h"
 #include "pico/stdlib.h"
-
 
 // PIO program for WS2812 (simplified - actual timing from pico-examples)
 // WS2812 requires 800kHz data rate with specific T0H, T1H, T0L, T1L timings
 
-static PIO pio_instance = pio0;
-static uint sm = 0;
+static uint8_t ws2812_pin = 22; // Default
 static bool initialized = false;
 
-// Inline PIO program for WS2812
-// This generates the precise timing needed for WS2812 protocol
-static const uint16_t ws2812_program[] = {
-    // Simplified - in production use the ws2812.pio from pico-examples
-    0x6001, // out pins, 1 side 0
-    0x1123, // jmp !osre, 3 side 1
-    0xe000, // set pins, 0
-};
-
 bool ws2812_init(uint8_t pin) {
+  ws2812_pin = pin;
   // Initialize GPIO
   gpio_init(pin);
   gpio_set_dir(pin, GPIO_OUT);
@@ -66,7 +57,7 @@ void ws2812_set_color(uint32_t grb) {
   if (!initialized)
     return;
 
-  uint8_t pin = 22; // TODO: Get from init
+  uint8_t pin = ws2812_pin;
 
   // Disable interrupts for timing-critical section
   uint32_t irq = save_and_disable_interrupts();

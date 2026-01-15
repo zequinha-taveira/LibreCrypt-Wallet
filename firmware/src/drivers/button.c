@@ -11,8 +11,7 @@
 
 // Linker marker for code that must run from RAM (flash is disabled when
 // checking BOOTSEL)
-#define __no_inline_not_in_flash_func(func)                                    \
-  __attribute__((noinline, section(".time_critical." #func))) func
+// __no_inline_not_in_flash_func is defined in pico/platform.h
 
 void button_init(void) {
 #ifdef PIN_BUTTON_CONFIRM
@@ -25,7 +24,7 @@ void button_init(void) {
 // Function to read BOOTSEL button state
 // Must run from RAM because it toggles Flash CS pin
 bool __no_inline_not_in_flash_func(button_is_pressed)(void) {
-  const uint CS_PIN_INDEX = 1;
+  const unsigned int CS_PIN_INDEX = 1;
 
   // 1. Disable interrupts and other cores to prevent flash access
   // For simplicity in this stubs/single-core proof of concept:

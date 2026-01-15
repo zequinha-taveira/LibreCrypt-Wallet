@@ -1,0 +1,52 @@
+# OS
+.DS_Store
+Thumbs.db
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+
+# Rust
+target/
+**/*.rs.bk
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+.env
+.env.local
+
+# Firmware / C / CMake
+firmware/build/
+*.elf
+*.uf2
+*.hex
+*.map
+*.bin
+*.dis
+*.o
+*.obj
+*.d
+
+# Python
+__pycache__/
+*.pyc
+*.venv/
+env/
+venv/
+.pytest_cache/
+
+# LibreCrypt specific
+*.pico-sdk/

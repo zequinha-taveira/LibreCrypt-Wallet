@@ -23,11 +23,10 @@ pico_sdk_init()
 # =============================================================================
 # Compiler Flags for Security
 # =============================================================================
-add_compile_options(
     -Wall
     -Wextra
     -Werror
-    -fstack-protector-strong
+    -mlong-calls
     -ffunction-sections
     -fdata-sections
 )
@@ -41,6 +40,8 @@ set(CRYPTO_SOURCES
     src/crypto/bip39_wordlist.c
     src/crypto/secp256k1.c
     src/crypto/sha256_hw.c
+    src/drivers/ws2812.c
+    src/drivers/button.c
 )
 
 set(CRYPTO_EXPERIMENTAL_SOURCES
@@ -55,6 +56,7 @@ set(STORAGE_SOURCES
 
 set(USB_SOURCES
     src/usb/hid_protocol.c
+    src/usb/usb_descriptors.c
 )
 
 set(TRUSTZONE_SOURCES
@@ -82,9 +84,13 @@ target_include_directories(librecrypt_wallet PRIVATE
 target_link_libraries(librecrypt_wallet
     pico_stdlib
     pico_unique_id
+    pico_rand
     hardware_flash
     hardware_sync
+    hardware_sync
     hardware_sha256
+    hardware_pio
+    hardware_interp
     tinyusb_device
     tinyusb_board
 )

@@ -1,0 +1,17 @@
+[package]
+name = "librecrypt_core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+hidapi = "2.6"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+hex = "0.4"
+log = "0.4"
+env_logger = "0.10"
+sha2 = "0.10"
+rand = "0.8"
+bip39 = "2.0"
+bitcoin = "0.30"

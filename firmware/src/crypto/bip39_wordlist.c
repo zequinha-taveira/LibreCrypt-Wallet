@@ -8,7 +8,7 @@
 #include "crypto/bip39_wordlist.h"
 #include <stddef.h>
 
-const char *const BIP39_WORDLIST[BIP39_WORDLIST_SIZE] = {
+const char *const BIP39_WORDLIST[] = {
     "abandon",  "ability",   "able",     "about",    "above",    "absent",
     "absorb",   "abstract",  "absurd",   "abuse",    "access",   "accident",
     "account",  "accuse",    "achieve",  "acid",     "acoustic", "acquire",
