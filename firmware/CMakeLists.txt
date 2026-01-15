@@ -38,6 +38,7 @@ add_compile_options(
 set(CRYPTO_SOURCES
     src/crypto/bip32.c
     src/crypto/bip39.c
+    src/crypto/bip39_wordlist.c
     src/crypto/secp256k1.c
     src/crypto/sha256_hw.c
 )

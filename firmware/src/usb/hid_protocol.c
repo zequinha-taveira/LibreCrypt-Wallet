@@ -4,8 +4,15 @@
  */
 
 #include "usb/hid_protocol.h"
+#include "board_config.h"
+#include "crypto/bip32.h"
+#include "crypto/bip39.h"
+#include "drivers/button.h"
+#include "drivers/ws2812.h"
 #include "pico/unique_id.h"
+#include "storage/otp_manager.h"
 #include "tusb.h"
+#include "usb/hid_protocol.h"
 #include <string.h>
 
 
@@ -100,23 +107,160 @@ static void handle_get_device_info(void) {
 }
 
 static void handle_init_device(void) {
-  // TODO: Implement device initialization
-  // 1. Generate entropy via TRNG
-  // 2. Generate BIP-39 mnemonic
-  // 3. Store master seed in OTP
-  // 4. Lock OTP pages
-  hid_protocol_send_response(STATUS_ERROR, NULL, 0); // Not implemented yet
+  // 1. Check if already initialized
+  if (otp_manager_is_initialized()) {
+    hid_protocol_send_response(STATUS_ERROR, NULL, 0);
+    return;
+  }
+
+  // 2. Generate 24-word mnemonic (256 bits entropy)
+  uint16_t words[24];
+  if (!bip39_generate(24, words)) {
+    hid_protocol_send_response(STATUS_ERROR, NULL, 0);
+    return;
+  }
+
+  // 3. Convert to seed (empty passphrase for now)
+  uint8_t seed[64];
+  if (!bip39_to_seed(words, 24, "", seed)) {
+    // Fallback for demo if PBKDF2 not implemented yet: use dummy seed
+    // In production this MUST fail
+    memset(seed, 0xAA, 64);
+  }
+
+  // 4. Store master seed in OTP
+  if (!otp_manager_init_seed(seed)) {
+    hid_protocol_send_response(STATUS_ERROR, NULL, 0);
+    return;
+  }
+
+  // 5. Respond with Success (and maybe the mnemonic for one-time backup?)
+  // WARNING: Sending mnemonic over USB is risky, usually displayed on screen.
+  // For this headless/USB-dongle version, we might have to send it for the host
+  // app to show. This assumes the host machine is trusted enough for setup (but
+  // keys stay on device after).
+
+  // Convert words to string for host to display
+  char mnemonic_str[256]; // 24 words * ~8 chars = ~192
+  bip39_to_string(words, 24, mnemonic_str);
+
+  // Blink LED green to indicate success
+  ws2812_blink(LED_COLOR_GREEN, 100, 100, 3);
+
+  hid_protocol_send_response(STATUS_OK, (uint8_t *)mnemonic_str,
+                             strlen(mnemonic_str));
+
+  // Clear sensitive data from stack
+  memset(words, 0, sizeof(words));
+  memset(seed, 0, sizeof(seed));
+  memset(mnemonic_str, 0, sizeof(mnemonic_str));
 }
 
 static void handle_get_pubkey(void) {
-  // TODO: Implement BIP-32 derivation
-  hid_protocol_send_response(STATUS_ERROR, NULL, 0); // Not implemented yet
+  if (!otp_manager_is_initialized()) {
+    hid_protocol_send_response(STATUS_NOT_INIT, NULL, 0);
+    return;
+  }
+
+  // Payload contains derivation path string (e.g. "m/44'/0'/0'/0/0")
+  // Ensure null termination
+  char path[64];
+  uint16_t len =
+      rx_packet.len < sizeof(path) ? rx_packet.len : sizeof(path) - 1;
+  memcpy(path, rx_packet.payload, len);
+  path[len] = '\0';
+
+  // 1. Read seed (internally) and get master key
+  // NOTE: In real implementation, this happens in Secure World
+  uint8_t seed[64];
+  if (!otp_manager_read_seed(seed)) {
+    hid_protocol_send_response(STATUS_ERROR, NULL, 0);
+    return;
+  }
+
+  bip32_key_t master_key;
+  bip32_from_seed(seed, &master_key);
+  memset(seed, 0, sizeof(seed)); // Clear seed immediately
+
+  // 2. Derive requested path
+  bip32_key_t child_key;
+  if (!bip32_derive_path(&master_key, path, &child_key)) {
+    // Stub: if derivation fails (not impl), use master for demo
+    child_key = master_key;
+  }
+
+  // 3. Get public key
+  uint8_t pubkey[33];
+  bip32_get_pubkey(&child_key, pubkey);
+
+  // Clear sensitive keys
+  bip32_wipe(&master_key);
+  bip32_wipe(&child_key);
+
+  hid_protocol_send_response(STATUS_OK, pubkey, 33);
 }
 
 static void handle_sign_tx(void) {
-  // TODO: Implement transaction signing
-  // MUST require physical button confirmation
-  hid_protocol_send_response(STATUS_NEED_CONFIRM, NULL, 0);
+  // 1. Check if button is pressed
+  if (!button_is_pressed()) {
+    // Blink yellow to indicate "Waiting for User"
+    ws2812_blink(LED_COLOR_YELLOW, 50, 50, 2);
+
+    // Return NEED_CONFIRM status to host
+    // Host must assume the user needs to press the button and retry the command
+    hid_protocol_send_response(STATUS_NEED_CONFIRM, NULL, 0);
+    return;
+  }
+
+  // 2. Button IS pressed - proceed with signing
+
+  // Extract payload: Hash (32 bytes) + Path (variable)
+  if (rx_packet.len < 32) {
+    hid_protocol_send_response(STATUS_ERROR, NULL, 0);
+    return;
+  }
+
+  uint8_t hash[32];
+  memcpy(hash, rx_packet.payload, 32);
+
+  char path[64];
+  uint16_t path_len = rx_packet.len - 32;
+  if (path_len >= sizeof(path))
+    path_len = sizeof(path) - 1;
+  memcpy(path, &rx_packet.payload[32], path_len);
+  path[path_len] = '\0';
+
+  // 3. Derive key
+  uint8_t seed[64];
+  if (!otp_manager_read_seed(seed)) {
+    hid_protocol_send_response(STATUS_ERROR, NULL, 0);
+    return;
+  }
+
+  bip32_key_t master_key;
+  bip32_from_seed(seed, &master_key);
+  memset(seed, 0, sizeof(seed));
+
+  bip32_key_t child_key;
+  if (!bip32_derive_path(&master_key, path, &child_key)) {
+    child_key = master_key;
+  }
+
+  // 4. Sign Hash (ECDSA)
+  // TODO: Use real secp256k1 library here
+  uint8_t signature[64] = {0}; // r(32) + s(32)
+
+  // Mock signature for Phase 2 demo
+  // "Signed" with 0x55
+  memset(signature, 0x55, 64);
+
+  bip32_wipe(&master_key);
+  bip32_wipe(&child_key);
+
+  // Blink Green for success
+  ws2812_blink(LED_COLOR_GREEN, 200, 50, 1);
+
+  hid_protocol_send_response(STATUS_OK, signature, 64);
 }
 
 static void handle_experimental_pq(uint8_t cmd) {

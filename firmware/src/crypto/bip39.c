@@ -8,22 +8,18 @@
  */
 
 #include "crypto/bip39.h"
+#include "crypto/bip39_wordlist.h"
 #include "crypto/sha256_hw.h"
 #include "pico/rand.h"
 #include <string.h>
+
 
 // =============================================================================
 // BIP-39 English Wordlist (first 10 words for demo)
 // TODO: Include full 2048-word list
 // =============================================================================
 
-static const char *const BIP39_WORDLIST[] = {
-    "abandon", "ability", "able", "about", "above", "absent", "absorb",
-    "abstract", "absurd", "abuse",
-    // ... 2038 more words
-    NULL};
-
-static const uint16_t BIP39_WORDLIST_SIZE = 10; // TODO: 2048
+// Uses external wordlist from bip39_wordlist.c
 
 // =============================================================================
 // Hardware TRNG Access
